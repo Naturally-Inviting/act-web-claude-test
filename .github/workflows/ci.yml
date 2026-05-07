@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # The e2e suite uses Playwright's `request` fixture (HTTP only) and
+      # never launches a browser, so we intentionally skip
+      # `npx playwright install`. When a future test uses `page` or
+      # `context`, add the install step here — likely
+      # `npx playwright install --with-deps chromium`, or switch this
+      # job to a Playwright-pinned container image.
+      - run: npm run e2e
